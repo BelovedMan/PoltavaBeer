@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Електронний журнал обліку КЕГ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1e3c72;
+            --secondary: #2a5298;
+            --accent: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f5f7fa;
+            --dark: #333;
+            --beer-light: #f8c255;
+            --beer-dark: #d97e00;
+            --notification: #ff5252;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5e6c8 0%, #e6d2aa 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Модальні вікна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Шапка */
+        header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-top-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-top-info div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        .notification-badge {
+            background-color: var(--notification);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+            overflow: hidden;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 160px;
+            text-align: center;
+            padding: 15px 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab.active {
+            background-color: white;
+            color: var(--primary);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab i {
+            margin-right: 8px;
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background-color: var(--notification);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-section {
+            padding: 25px;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+            color: var(--primary);
+        }
+
+        .section-title i {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Журнал */
+        .journal-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background: linear-gradient(to bottom, var(--secondary), var(--primary));
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .error {
+            background-color: #ffebee !important;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .add-btn {
+            background: linear-gradient(90deg, var(--accent) 0%, #2e7d32 100%);
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            background: linear-gradient(90deg, #43a047 0%, #1b5e20 100%);
+        }
+
+        .save-btn {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background-color: #1976d2;
+        }
+
+        .edit-btn {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #e65100;
+        }
+
+        .delete-btn {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c62828;
+        }
+
+        .export-btn {
+            background: linear-gradient(90deg, #9c27b0, #6a1b9a);
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(90deg, #ab47bc, #7b1fa2);
+        }
+
+        /* Форма швидкого запису */
+        .quick-entry {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--beer-light);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label i {
+            color: var(--secondary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .stat-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+            color: var(--secondary);
+        }
+
+        .stat-desc {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            height: 400px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recent-activity {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .activity-item {
+            display: flex;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-warning {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-danger {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .status-cut {
+            background-color: #e1bee7;
+            color: #6a1b9a;
+        }
+
+        .status-top-rubber {
+            background-color: #bbdefb;
+            color: #1565c0;
+        }
+
+        .status-bottom-rubber {
+            background-color: #ffccbc;
+            color: #d84315;
+        }
+
+        .beer-type-tag {
+            background-color: var(--beer-light);
+            color: #5d4037;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+
+        .beer-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            opacity: 0.05;
+            z-index: 0;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border-color: var(--beer-light);
+        }
+
+        .quick-action-btn i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+
+        .beer-icon {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 3rem;
+            color: rgba(255,255,255,0.2);
+            z-index: 0;
+        }
+
+        .shift-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .shift-control-btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            border: none;
+            color: white;
+        }
+
+        .start-btn {
+            background: linear-gradient(90deg, var(--accent) 0%, #2e7d32 100%);
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(90deg, #43a047 0%, #1b5e20 100%);
+        }
+
+        .stop-btn {
+            background: linear-gradient(90deg, var(--danger) 0%, #c62828 100%);
+        }
+
+        .stop-btn:hover {
+            background: linear-gradient(90deg, #e53935 0%, #b71c1c 100%);
+        }
+
+        .pause-btn {
+            background: linear-gradient(90deg, var(--warning) 0%, #ef6c00 100%);
+        }
+
+        .pause-btn:hover {
+            background: linear-gradient(90deg, #fb8c00 0%, #e65100 100%);
+        }
+
+        .switch-btn {
+            background: linear-gradient(90deg, #9c27b0 0%, #6a1b9a 100%);
+        }
+
+        .switch-btn:hover {
+            background: linear-gradient(90deg, #ab47bc 0%, #7b1fa2 100%);
+        }
+
+        .shift-log-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .shift-log-item:last-child {
+            border-bottom: none;
+        }
+
+        .shift-log-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .shift-log-content {
+            flex: 1;
+        }
+
+        .shift-log-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .shift-log-reason {
+            margin-top: 5px;
+            font-style: italic;
+            color: #555;
+        }
+
+        .hourly-check {
+            background-color: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Швидкі кнопки додавання кег */
+        .quick-keg-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .keg-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            border: none;
+            color: white;
+        }
+
+        .keg-btn.ok {
+            background: linear-gradient(90deg, #4caf50 0%, #2e7d32 100%);
+        }
+
+        .keg-btn.cut {
+            background: linear-gradient(90deg, #9c27b0 0%, #6a1b9a 100%);
+        }
+
+        .keg-btn.top-rubber {
+            background: linear-gradient(90deg, #2196f3 0%, #0d47a1 100%);
+        }
+
+        .keg-btn.bottom-rubber {
+            background: linear-gradient(90deg, #ff9800 0%, #e65100 100%);
+        }
+
+        /* Сповіщення та замітки */
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: #fffde7;
+        }
+
+        .notification-item.unread {
+            background-color: #ffebee;
+            border-left: 4px solid var(--notification);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .notification-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .notification-content {
+            margin-top: 10px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mark-read-btn {
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .master-form {
+            background-color: #f5f7fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+        }
+
+        .form-row label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-row textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            font-size: 1rem;
+        }
+
+        .notification-badge-container {
+            position: relative;
+        }
+
+        .keg-type-tag {
+            background-color: #e0f7fa;
+            color: #006064;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .data-actions {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .data-actions button {
+            padding: 12px 25px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+
+            .shift-controls {
+                flex-direction: column;
+            }
+
+            .quick-keg-buttons {
+                flex-direction: column;
+            }
+
+            .data-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Основний контент -->
+    <div class="container" id="main-container">
+        <header>
+            <i class="fas fa-beer beer-icon"></i>
+            <div class="header-top">
+                <h1><i class="fas fa-beer"></i> ЕЛЕКТРОННИЙ ЖУРНАЛ ОБЛІКУ КЕГ</h1>
+                <div class="header-top-info">
+                    <div><i class="fas fa-clock"></i> <span id="current-time">00:00:00</span></div>
+                    <div><i class="fas fa-calendar"></i> <span id="current-date">09.06.2025</span></div>
+                    <div class="notification-badge-container">
+                        <i class="fas fa-user"></i> <span id="current-user">Оператор</span>
+                        <span class="notification-badge" id="user-badge">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-info">
+                <div><strong>Тип журналу:</strong> лінія-1</div>
+                <div><strong>Формат КЕГ:</strong> 50 Комбі</div>
+                <div><strong>Статус зміни:</strong> <span id="shift-status">Не активна</span></div>
+                <div><strong>Вироблено за зміну:</strong> <span id="kegs-produced">0</span> кег</div>
+                <div><strong>Обрізані фітінги:</strong> <span id="cut-kegs-count">0</span></div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="journal">
+                    <i class="fas fa-book"></i> Журнал
+                </div>
+                <div class="tab" data-tab="add-entry">
+                    <i class="fas fa-plus-circle"></i> Швидкий запис
+                </div>
+                <div class="tab" data-tab="performance">
+                    <i class="fas fa-chart-line"></i> Продуктивність
+                </div>
+                <div class="tab" data-tab="shift-log">
+                    <i class="fas fa-clipboard-list"></i> Журнал зміни
+                </div>
+                <div class="tab" data-tab="notifications">
+                    <i class="fas fa-bell"></i> Сповіщення
+                    <span class="tab-badge" id="notification-badge">0</span>
+                </div>
+                <div class="tab" data-tab="master-notes">
+                    <i class="fas fa-clipboard-check"></i> Замітка майстра
+                </div>
+            </div>
+        </header>
+
+        <!-- Початок зміни -->
+        <div class="start-shift" id="start-shift-section">
+            <div class="section-title">
+                <i class="fas fa-play-circle"></i>
+                <h2>Початок зміни</h2>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="shift-operator"><i class="fas fa-user"></i> П.І.П бригадира</label>
+                    <input type="text" id="shift-operator" placeholder="Введіть П.І.Б бригадира" class="shift-input">
+                    <label for="recording-operator"><i class="fas fa-user"></i> П.І.П. на записі</label>
+                    <input type="text" id="recording-operator" placeholder="Введіть П.І.П на записі" class="shift-input">
+                </div>
+                <div class="form-group">
+                    <label for="weight"><i class="fas fa-weight-hanging"></i> Стандартна вага (кг)</label>
+                    <input type="number" id="weight" value="62" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="combo-option"><i class="fas fa-cogs"></i> тип кеги</label>
+                    <select id="combo-option" class="shift-select">
+                        <option value="50-combo">50 Комбі</option>
+                        <option value="flash-50">Флеш 50</option>
+                        <option value="30-combo">30 Комбі</option>
+                        <option value="flash-30">Флеш 30</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="add-btn" onclick="startShift()">
+                    <i class="fas fa-play-circle"></i> Почати зміну
+                </button>
+            </div>
+        </div>
+
+        <!-- Журнал -->
+        <div class="content-section active" id="journal-section">
+            <div class="section-title">
+                <i class="fas fa-book"></i>
+                <h2>Журнал обліку кег</h2>
+            </div>
+
+            <div class="shift-controls">
+                <button class="shift-control-btn start-btn" onclick="startShift()">
+                    <i class="fas fa-play"></i> Почати зміну
+                </button>
+                <button class="shift-control-btn pause-btn" onclick="pauseShift()">
+                    <i class="fas fa-pause"></i> Пауза
+                </button>
+                <button class="shift-control-btn stop-btn" onclick="stopShift()">
+                    <i class="fas fa-stop"></i> Закінчити зміну
+                </button>
+                <button class="shift-control-btn switch-btn" onclick="switchLine()">
+                    <i class="fas fa-exchange-alt"></i> Перемикання сорту
+                </button>
+                <button class="shift-control-btn stop-btn" onclick="showProcessSelection()">
+                    <i class="fas fa-hand-paper"></i> Зупинити процес
+                </button>
+                <button class="shift-control-btn start-btn" onclick="resumeProcess()">
+                    <i class="fas fa-play-circle"></i> Продовжити процес
+                </button>
+            </div>
+
+            <div class="data-actions">
+                <button class="save-btn" onclick="saveToLocalStorage()">
+                    <i class="fas fa-save"></i> Зберегти дані
+                </button>
+                <button class="export-btn" onclick="exportData()">
+                    <i class="fas fa-download"></i> Експорт даних
+                </button>
+                <button class="edit-btn" onclick="document.getElementById('import-file').click()">
+                    <i class="fas fa-upload"></i> Імпорт даних
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+            </div>
+
+            <div class="quick-keg-buttons">
+                <button class="keg-btn ok" onclick="quickAddKeg('ok')">
+                    <i class="fas fa-check-circle"></i> КЕГ ОК
+                </button>
+                <button class="keg-btn cut" onclick="quickAddKeg('cut')">
+                    <i class="fas fa-cut"></i> Обрізаний фітінг
+                </button>
+                <button class="keg-btn top-rubber" onclick="quickAddKeg('top')">
+                    <i class="fas fa-ellipsis-h"></i> Верхня резинка
+                </button>
+                <button class="keg-btn bottom-rubber" onclick="quickAddKeg('bottom')">
+                    <i class="fas fa-ellipsis-h"></i> Нижня резинка
+                </button>
+            </div>
+
+            <div class="journal-container">
+                <table id="keg-journal">
+                    <thead>
+                        <tr>
+                            <th>№ з/п</th>
+                            <th>Час</th>
+                            <th>№ КЕГ</th>
+                            <th>Вага (кг)</th>
+                            <th>Сорт пива</th>
+                            <th>Маркування</th>
+                            <th>Статус</th>
+                            <th>Тип КЕГ</th>
+                            <th>Оператор</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Дані будуть додаватися динамічно -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Форма швидкого запису -->
+        <div class="content-section" id="add-entry-section">
+            <div class="section-title">
+                <i class="fas fa-plus-circle"></i>
+                <h2>Швидкий запис кег</h2>
+            </div>
+
+            <div class="quick-actions">
+                <div class="quick-action-btn" onclick="setQuickAction('ok')">
+                    <i class="fas fa-check-circle"></i>
+                    <div>Без проблем</div>
+                </div>
+                <div class="quick-action-btn" onclick="setQuickAction('tighten')">
+                    <i class="fas fa-tools"></i>
+                    <div>Потрібно докрутити</div>
+                </div>
+                <div class="quick-action-btn" onclick="setQuickAction('replace')">
+                    <i class="fas fa-exchange-alt"></i>
+                    <div>Замінити фітінг</div>
+                </div>
+                <div class="quick-action-btn" onclick="setQuickAction('cut')">
+                    <i class="fas fa-cut"></i>
+                    <div>Обрізаний фітінг</div>
+                </div>
+                <div class="quick-action-btn" onclick="setQuickAction('top')">
+                    <i class="fas fa-ellipsis-h"></i>
+                    <div>Верхня резинка</div>
+                </div>
+                <div class="quick-action-btn" onclick="setQuickAction('bottom')">
+                    <i class="fas fa-ellipsis-h"></i>
+                    <div>Нижня резинка</div>
+                </div>
+            </div>
+
+            <div class="quick-entry">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="keg-count"><i class="fas fa-hashtag"></i> Кількість кег</label>
+                        <input type="number" id="keg-count" min="1" max="50" value="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="keg-weight"><i class="fas fa-weight-hanging"></i> Вага (кг)</label>
+                        <input type="text" id="keg-weight" value="62">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="beer-type"><i class="fas fa-wine-bottle"></i> Сорт пива</label>
+                        <select id="beer-type">
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="blanche">blanch</option>
+                            <option value="no filter">no filter</option>
+                            <option value="Special">Спеціальне пиво</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fitting-status"><i class="fas fa-wrench"></i> Статус фітінгу</label>
+                        <select id="fitting-status">
+                            <option value="ОК (не потребує втручання)">ОК (не потребує втручання)</option>
+                            <option value="Потребує докручування">Потребує докручування</option>
+                            <option value="Потребує заміни">Потребує заміни</option>
+                            <option value="Обрізаний фітинг">Обрізаний фітинг</option>
+                            <option value="Верхня резинка">Верхня резинка</option>
+                            <option value="Нижня резинка">Нижня резинка</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional-actions"><i class="fas fa-tasks"></i> Додаткові дії</label>
+                        <select id="additional-actions">
+                            <option value="-">-</option>
+                            <option value="Виконано докручування">Виконано докручування</option>
+                            <option value="Виконано заміну фітінгу">Виконано заміну фітінгу</option>
+                            <option value="Виконано докачування">Виконано докачування</option>
+                            <option value="Заміна обрізаного фітінгу">Заміна обрізаного фітінгу</option>
+                            <option value="Заміна верхньої резинки">Заміна верхньої резинки</option>
+                            <option value="Заміна нижньої резинки">Заміна нижньої резинки</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes"><i class="fas fa-sticky-note"></i> Примітки</label>
+                        <input type="text" id="notes" placeholder="Наприклад: 6 верхньої л">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marking-date"><i class="fas fa-calendar-alt"></i> Дата наливу</label>
+                        <input type="date" id="marking-date" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expiry-date"><i class="fas fa-calendar-day"></i> Дата закінчення строку придатності</label>
+                        <input type="date" id="expiry-date" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batch-mark"><i class="fas fa-tag"></i> Назва марки</label>
+                        <input type="text" id="batch-mark" placeholder="Введіть назву марки">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="save-btn" onclick="addEntries()">
+                        <i class="fas fa-save"></i> Зберегти записи
+                    </button>
+                    <button class="edit-btn" onclick="resetForm()">
+                        <i class="fas fa-redo"></i> Очистити форму
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Продуктивність -->
+        <div class="content-section" id="performance-section">
+            <div class="section-title">
+                <i class="fas fa-chart-line"></i>
+                <h2>Аналіз продуктивності</h2>
+            </div>
+
+            <div class="hourly-check">
+                <div class="section-title">
+                    <i class="fas fa-hourglass-half"></i>
+                    <h3>Щогодинна перевірка</h3>
+                </div>
+                <p>Остання перевірка: <span id="last-hourly-check">---</span></p>
+                <p>Вироблено за останню годину: <span id="hourly-kegs">0</span> кег</p>
+                <button class="save-btn" onclick="runHourlyCheck()">
+                    <i class="fas fa-sync"></i> Виконати перевірку зараз
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Всього кег</div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+                            <i class="fas fa-beer"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="total-kegs">0</div>
+                    <div class="stat-desc">Зареєстровано в системі</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Кег без проблем</div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4caf50, #2e7d32);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="ok-kegs">0</div>
+                    <div class="stat-desc">Статус "ОК"</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Обрізані фітінги</div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #9c27b0, #6a1b9a);">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="cut-kegs">0</div>
+                    <div class="stat-desc">Потрібна заміна</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Проблеми з резинками</div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #2196f3, #0d47a1);">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="rubber-kegs">0</div>
+                    <div class="stat-desc">Верхні/нижні резинки</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fas fa-chart-pie"></i> Розподіл за статусом фітінгу</div>
+                <canvas id="status-chart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fas fa-beer"></i> Розподіл за сортами пива</div>
+                <canvas id="beer-chart"></canvas>
+            </div>
+
+            <div class="recent-activity">
+                <div class="chart-title"><i class="fas fa-history"></i> Останні дії</div>
+                <div id="activity-list">
+                    <!-- Активність буде додаватися динамічно -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Журнал зміни -->
+        <div class="content-section" id="shift-log-section">
+            <div class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                <h2>Журнал зміни</h2>
+            </div>
+
+            <div class="shift-controls">
+                <button class="shift-control-btn start-btn" onclick="startShift()">
+                    <i class="fas fa-play"></i> Почати зміну
+                </button>
+                <button class="shift-control-btn pause-btn" onclick="pauseShift()">
+                    <i class="fas fa-pause"></i> Пауза
+                </button>
+                <button class="shift-control-btn stop-btn" onclick="stopShift()">
+                    <i class="fas fa-stop"></i> Закінчити зміну
+                </button>
+                <button class="shift-control-btn switch-btn" onclick="switchLine()">
+                    <i class="fas fa-exchange-alt"></i> Переключити лінію
+                </button>
+                <button class="shift-control-btn stop-btn" onclick="showProcessSelection()">
+                    <i class="fas fa-hand-paper"></i> Зупинити процес
+                </button>
+                <button class="shift-control-btn start-btn" onclick="resumeProcess()">
+                    <i class="fas fa-play-circle"></i> Продовжити процес
+                </button>
+            </div>
+
+            <div class="shift-log" id="shift-log-container">
+                <!-- Події зміни будуть додаватися динамічно -->
+            </div>
+        </div>
+
+        <!-- Сповіщення -->
+        <div class="content-section" id="notifications-section">
+            <div class="section-title">
+                <i class="fas fa-bell"></i>
+                <h2>Сповіщення та вказівки</h2>
+            </div>
+
+            <div id="notifications-list">
+                <!-- Сповіщення будуть додаватися динамічно -->
+            </div>
+        </div>
+
+        <!-- Замітка майстра -->
+        <div class="content-section" id="master-notes-section">
+            <div class="section-title">
+                <i class="fas fa-clipboard-check"></i>
+                <h2>Замітка майстра</h2>
+            </div>
+
+            <div class="master-form">
+                <div class="form-row">
+                    <label for="note-title"><i class="fas fa-heading"></i> Заголовок замітки</label>
+                    <input type="text" id="note-title" placeholder="Введіть заголовок">
+                </div>
+
+                <div class="form-row">
+                    <label for="note-content"><i class="fas fa-comment-alt"></i> Текст замітки</label>
+                    <textarea id="note-content" placeholder="Введіть вказівки для оператора..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button class="save-btn" onclick="addMasterNote()">
+                        <i class="fas fa-paper-plane"></i> Надіслати оператору
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Система електронного обліку КЕГ | © 2025 ПолтавПиво"</p>
+        </footer>
+    </div>
+
+    <!-- Модальне вікно для зупинки процесу -->
+    <div id="process-selection-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-hand-paper"></i> Зупинити процес</h3>
+                <button class="delete-btn" onclick="cancelSelection()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-group">
+                <label for="process-select"><i class="fas fa-cogs"></i> Виберіть процес:</label>
+                <select id="process-select">
+                    <option value="meal-foam-wash">Обід + Пінна мийка</option>
+                    <option value="sip">СІП</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="save-btn" onclick="stopProcess()">
+                    <i class="fas fa-check"></i> Підтвердити
+                </button>
+                <button class="delete-btn" onclick="cancelSelection()">
+                    <i class="fas fa-times"></i> Скасувати
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальні змінні
+        let kegData = [];
+        let shiftEvents = [];
+        let notifications = [];
+        let shiftActive = false;
+        let shiftStartTime = null;
+        let shiftPaused = false;
+        let currentOperator = 'Оператор';
+        let kegsProduced = 0;
+        let lastHourlyCheck = null;
+        let hourlyKegs = 0;
+        let editingId = null;
+        let lastBatchMark = `BATCH-${new Date().getFullYear()}`;
+        let lastBeerType = "10";
+        let lastComboOption = "50 Комбі";
+        let beerTypes = [
+            { name: "10", color: "#FFD54F" },
+            { name: "11", color: "#FFB74D" },
+            { name: "12", color: "#E65100" },
+            { name: "13", color: "#5D4037" },
+            { name: "14", color: "#4E342E" },
+            { name: "blanche", color: "#FFF176" },
+            { name: "no filter", color: "#BCAAA4" },
+            { name: "Special", color: "#AB47BC" }
+        ];
+        
+        // Ініціалізація дати та часу
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('uk-UA');
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('uk-UA');
+
+            // Автоматична перевірка щогодини
+            if (shiftActive && !shiftPaused) {
+                const currentHour = now.getHours();
+                if (lastHourlyCheck === null || lastHourlyCheck !== currentHour) {
+                    runHourlyCheck();
+                }
+            }
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Функція для переключення вкладок
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`${tabId}-section`).classList.add('active');
+            if (tabId === 'performance') updateCharts();
+            if (tabId === 'notifications') markNotificationsAsRead();
+        }
+
+        // Перемикач вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+
+        // Початок зміни
+        function startShift() {
+            const operator = document.getElementById('shift-operator').value || currentOperator;
+            const recordingOperator = document.getElementById('recording-operator').value || currentOperator;
+
+            if (!operator || !recordingOperator) {
+                alert('Будь ласка, введіть імена операторів');
+                return;
+            }
+
+            currentOperator = operator;
+            shiftActive = true;
+            shiftPaused = false;
+            shiftStartTime = new Date();
+            kegsProduced = 0;
+            
+            // Очищення журналу
+            kegData = [];
+            renderTable();
+            updateCharts();
+
+            document.getElementById('shift-status').textContent = 'Активна';
+            document.getElementById('current-user').textContent = operator;
+            document.getElementById('kegs-produced').textContent = kegsProduced;
+            document.getElementById('cut-kegs-count').textContent = '0';
+
+            addShiftEvent('Початок зміни', `Бригадир: ${operator}, На записі: ${recordingOperator}`);
+            switchTab('add-entry');
+
+            alert(`Зміну розпочато! Бригадир: ${operator}, На записі: ${recordingOperator}`);
+            saveToLocalStorage();
+        }
+
+        // Пауза зміни
+        function pauseShift() {
+            if (!shiftActive) {
+                alert('Зміна не активна!');
+                return;
+            }
+
+            const reason = prompt('Вкажіть причину паузи:');
+            if (reason) {
+                shiftPaused = true;
+                document.getElementById('shift-status').textContent = 'Пауза';
+                addShiftEvent('Пауза зміни', reason);
+                addNotification('Пауза зміни', `Причина: ${reason}`, 'system');
+                alert(`Зміна призупинена. Причина: ${reason}`);
+                saveToLocalStorage();
+            }
+        }
+
+        // Зупинка зміни
+        function stopShift() {
+            if (!shiftActive) {
+                alert('Зміна не активна!');
+                return;
+            }
+
+            const reason = prompt('Вкажіть причину завершення зміни:');
+            if (reason) {
+                shiftActive = false;
+                shiftPaused = false;
+                document.getElementById('shift-status').textContent = 'Завершена';
+                addShiftEvent('Завершення зміни', reason);
+                addNotification('Закінчення зміни', `Причина: ${reason}`, 'system');
+
+                const now = new Date();
+                const duration = Math.floor((now - shiftStartTime) / 60000);
+
+                alert(`Зміну завершено! Тривалість: ${duration} хвилин. Вироблено кег: ${kegsProduced}`);
+                saveToLocalStorage();
+            }
+        }
+
+        // Переключення лінії
+        function switchLine() {
+            if (!shiftActive) {
+                alert('Зміна не активна!');
+                return;
+            }
+
+            const line = prompt('Введіть нову лінію:');
+            if (line) {
+                const reason = prompt('Вкажіть причину переключення:');
+                if (reason) {
+                    document.querySelector('.header-info div:first-child').innerHTML = `<strong>Тип журналу:</strong> ${line}`;
+                    addShiftEvent('Переключення лінії', `Нова лінія: ${line}. Причина: ${reason}`);
+                    addNotification('Переключення лінії', `Нова лінія: ${line}. Причина: ${reason}`, 'system');
+                    alert(`Лінію переключено на: ${line}`);
+                    saveToLocalStorage();
+                }
+            }
+        }
+
+        // Показати вибір процесу для зупинки
+        function showProcessSelection() {
+            if (!shiftActive) {
+                alert('Зміна не активна!');
+                return;
+            }
+            document.getElementById('process-selection-modal').style.display = 'flex';
+        }
+
+        // Скасувати вибір процесу
+        function cancelSelection() {
+            document.getElementById('process-selection-modal').style.display = 'none';
+        }
+
+        // Зупинити процес
+        function stopProcess() {
+            const processSelect = document.getElementById('process-select');
+            const selectedProcess = processSelect.options[processSelect.selectedIndex].text;
+
+            // Закрити модальне вікно
+            cancelSelection();
+
+            // Додати запис у журнал зміни
+            addShiftEvent('Зупинка процесу', `Процес: ${selectedProcess}`);
+
+            // Встановити статус паузи
+            shiftPaused = true;
+            document.getElementById('shift-status').textContent = 'Пауза';
+
+            // Додати сповіщення
+            addNotification('Процес зупинено', `Причина: ${selectedProcess}`, 'system');
+
+            alert(`Процес зупинено: ${selectedProcess}`);
+            saveToLocalStorage();
+        }
+
+        // Продовжити процес
+        function resumeProcess() {
+            if (!shiftActive) {
+                alert('Зміна не активна!');
+                return;
+            }
+
+            if (!shiftPaused) {
+                alert('Процес не був зупинений!');
+                return;
+            }
+
+            const reason = prompt('Вкажіть причину продовження процесу:');
+            if (reason) {
+                shiftPaused = false;
+                document.getElementById('shift-status').textContent = 'Активна';
+                addShiftEvent('Продовження процесу', reason);
+                addNotification('Продовження процесу', `Причина: ${reason}`, 'system');
+                alert(`Процес продовжено. Причина: ${reason}`);
+                saveToLocalStorage();
+            }
+        }
+
+        // Додавання події до журналу зміни
+        function addShiftEvent(eventType, reason) {
+            const now = new Date();
+            const event = {
+                id: shiftEvents.length + 1,
+                type: eventType,
+                time: now.toLocaleTimeString('uk-UA'),
+                date: now.toLocaleDateString('uk-UA'),
+                operator: currentOperator,
+                reason: reason
+            };
+
+            shiftEvents.push(event);
+            renderShiftLog();
+        }
+
+        // Відображення журналу зміни
+        function renderShiftLog() {
+            const container = document.getElementById('shift-log-container');
+            container.innerHTML = '';
+
+            if (shiftEvents.length === 0) {
+                container.innerHTML = '<p>Журнал зміни порожній</p>';
+                return;
+            }
+
+            shiftEvents.forEach(event => {
+                const eventEl = document.createElement('div');
+                eventEl.className = 'shift-log-item';
+
+                let iconClass = 'fas fa-info-circle';
+                let iconColor = '#1e3c72';
+
+                if (event.type.includes('Початок')) {
+                    iconClass = 'fas fa-play-circle';
+                    iconColor = '#4caf50';
+                } else if (event.type.includes('Завершення')) {
+                    iconClass = 'fas fa-stop-circle';
+                    iconColor = '#f44336';
+                } else if (event.type.includes('Пауза') || event.type.includes('Зупинка')) {
+                    iconClass = 'fas fa-pause-circle';
+                    iconColor = '#ff9800';
+                } else if (event.type.includes('Переключення')) {
+                    iconClass = 'fas fa-exchange-alt';
+                    iconColor = '#9c27b0';
+                } else if (event.type.includes('Продовження')) {
+                    iconClass = 'fas fa-play-circle';
+                    iconColor = '#4caf50';
+                }
+
+                eventEl.innerHTML = `
+                      <div class="shift-log-icon" style="background-color: ${iconColor}">
+                          <i class="${iconClass}"></i>
+                      </div>
+                      <div class="shift-log-content">
+                          <div class="activity-title">${event.type}</div>
+                          <div class="shift-log-time">${event.date} ${event.time} | Оператор: ${event.operator}</div>
+                          ${event.reason ? `<div class="shift-log-reason">Причина: ${event.reason}</div>` : ''}
+                      </div>
+                  `;
+
+                container.appendChild(eventEl);
+            });
+        }
+
+        // Додавання сповіщення
+        function addNotification(title, content, type = 'master') {
+            const now = new Date();
+            const notification = {
+                id: notifications.length + 1,
+                title: title,
+                content: content,
+                type: type,
+                date: now.toLocaleDateString('uk-UA'),
+                time: now.toLocaleTimeString('uk-UA'),
+                read: false
+            };
+
+            notifications.push(notification);
+            updateNotificationBadge();
+            renderNotifications();
+            saveToLocalStorage();
+        }
+
+        // Позначити сповіщення як прочитані
+        function markNotificationsAsRead() {
+            notifications.forEach(note => note.read = true);
+            updateNotificationBadge();
+            renderNotifications();
+            saveToLocalStorage();
+        }
+
+        // Оновити бейдж сповіщень
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(note => !note.read).length;
+            document.getElementById('notification-badge').textContent = unreadCount;
+            document.getElementById('user-badge').textContent = unreadCount;
+        }
+
+        // Відобразити сповіщення
+        function renderNotifications() {
+            const container = document.getElementById('notifications-list');
+            container.innerHTML = '';
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<p>Немає нових сповіщень</p>';
+                return;
+            }
+
+            notifications.slice().reverse().forEach(note => {
+                const noteEl = document.createElement('div');
+                noteEl.className = `notification-item ${note.read ? '' : 'unread'}`;
+
+                noteEl.innerHTML = `
+                      <div class="notification-header">
+                          <div class="notification-title">${note.title}</div>
+                          <div class="notification-time">${note.date} ${note.time}</div>
+                      </div>
+                      <div class="notification-content">${note.content}</div>
+                      <div class="notification-actions">
+                          ${!note.read ? `<button class="mark-read-btn" onclick="markNotificationAsRead(${note.id})">
+                              <i class="fas fa-check"></i> Позначити як прочитане
+                          </button>` : ''}
+                      </div>
+                  `;
+
+                container.appendChild(noteEl);
+            });
+        }
+
+        // Позначити конкретне сповіщення як прочитане
+        function markNotificationAsRead(id) {
+            const note = notifications.find(n => n.id === id);
+            if (note) {
+                note.read = true;
+                updateNotificationBadge();
+                renderNotifications();
+                saveToLocalStorage();
+            }
+        }
+
+        // Додати замітку майстра
+        function addMasterNote() {
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+
+            if (!title || !content) {
+                alert('Будь ласка, заповніть заголовок та зміст замітки');
+                return;
+            }
+
+            addNotification(title, content, 'master');
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-content').value = '';
+            alert('Замітку надіслано оператору!');
+            switchTab('notifications');
+        }
+
+        // Щогодинна перевірка
+        function runHourlyCheck() {
+            const now = new Date();
+            lastHourlyCheck = now.getHours();
+
+            // Підрахунок кег за останню годину
+            hourlyKegs = kegData.filter(keg => {
+                const kegTime = new Date(keg.timestamp);
+                return (now - kegTime) <= 3600000; // 1 година в мілісекундах
+            }).length;
+
+            document.getElementById('last-hourly-check').textContent = now.toLocaleTimeString('uk-UA');
+            document.getElementById('hourly-kegs').textContent = hourlyKegs;
+
+            // Додаємо запис у журнал зміни
+            addShiftEvent('Щогодинна перевірка', `Вироблено кег за годину: ${hourlyKegs}`);
+            saveToLocalStorage();
+        }
+
+        function quickAddKeg(type) {
+            if (!shiftActive) {
+                alert('Будь ласка, почніть зміну перед додаванням записів');
+                return;
+            }
+
+            let status, action, notes = '';
+            switch (type) {
+                case 'ok':
+                    status = 'ОК (не потребує втручання)';
+                    action = '-';
+                    break;
+                case 'cut':
+                    status = 'Обрізаний фітинг';
+                    action = 'Заміна обрізаного фітінгу';
+                    notes = 'Обрізаний фітинг';
+                    break;
+                case 'top':
+                    status = 'Верхня резинка';
+                    action = 'Заміна верхньої резинки';
+                    notes = 'Проблема з верхньою резинкою';
+                    break;
+                case 'bottom':
+                    status = 'Нижня резинка';
+                    action = 'Заміна нижньої резинки';
+                    notes = 'Проблема з нижньою резинкою';
+                    break;
+                default:
+                    alert('Невідомий тип дії');
+                    return;
+            }
+
+            const now = new Date();
+            const newId = kegData.length > 0 ? Math.max(...kegData.map(e => e.id)) + 1 : 1;
+
+            let markingDate = document.getElementById('marking-date').value || lastBatchMark;
+            let expiryDate = document.getElementById('expiry-date').value || lastBatchMark;
+
+            // Якщо дати не задані - використовуємо поточну
+            if (!markingDate) markingDate = now.toISOString().split('T')[0];
+            if (!expiryDate) expiryDate = new Date(new Date().setDate(now.getDate() + 30)).toISOString().split('T')[0];
+
+            const batchMark = lastBatchMark;
+
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const newEntry = {
+                id: newId,
+                time: timeStr,
+                timestamp: now.getTime(),
+                kegNumber: `KEG-${(1000 + newId).toString().substring(1)}`,
+                weight: "62",
+                beerType: lastBeerType,
+                kegMark: batchMark,
+                fittingStatus: status,
+                actions: action,
+                comboType: lastComboOption,
+                operator: currentOperator,
+                notes: notes,
+                qa: "Ні",
+                markingDate: markingDate,
+                expiryDate: expiryDate
+            };
+
+            kegData.push(newEntry);
+            kegsProduced++;
+
+            document.getElementById('kegs-produced').textContent = kegsProduced;
+            renderTable();
+            updateCharts();
+            switchTab('journal');
+            saveToLocalStorage();
+        }
+
+        // Додавання нових записів
+        function addEntries() {
+            if (!shiftActive) {
+                alert('Будь ласка, почніть зміну перед додаванням записів');
+                return;
+            }
+
+            const count = parseInt(document.getElementById('keg-count').value) || 1;
+            const weight = document.getElementById('keg-weight').value;
+            const beerType = document.getElementById('beer-type').value;
+            const fittingStatus = document.getElementById('fitting-status').value;
+            const actions = document.getElementById('additional-actions').value;
+            const notesInput = document.getElementById('notes').value || '';
+            const markingDate = document.getElementById('marking-date').value;
+            const expiryDate = document.getElementById('expiry-date').value;
+            const comboOption = document.getElementById('combo-option').value;
+            const batchInput = document.getElementById('batch-mark').value;
+
+            // Запам'ятовуємо останній вибраний сорт пива та тип кеги
+            lastBeerType = beerType;
+            lastComboOption = comboOption;
+
+            // Якщо поле не порожнє - запам'ятовуємо новий BATCH
+            if (batchInput.trim() !== '') {
+                lastBatchMark = batchInput.trim();
+            }
+
+            const batchMark = lastBatchMark;
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            for (let i = 0; i < count; i++) {
+                let newId;
+
+                if (editingId !== null) {
+                    newId = editingId;
+                    const index = kegData.findIndex(e => e.id === newId);
+                    if (index !== -1) {
+                        kegData[index] = {
+                            id: newId,
+                            time: timeStr,
+                            timestamp: now.getTime(),
+                            kegNumber: kegData[index].kegNumber,
+                            weight: weight,
+                            beerType: beerType,
+                            kegMark: batchMark,
+                            fittingStatus: fittingStatus,
+                            actions: actions,
+                            comboType: comboOption,
+                            operator: currentOperator,
+                            notes: notesInput,
+                            qa: "Ні",
+                            markingDate: markingDate,
+                            expiryDate: expiryDate
+                        };
+                    }
+                } else {
+                    newId = kegData.length > 0 ? Math.max(...kegData.map(e => e.id)) + 1 : 1;
+                    const newEntry = {
+                        id: newId,
+                        time: timeStr,
+                        timestamp: now.getTime(),
+                        kegNumber: `KEG-${(1000 + newId).toString().substring(1)}`,
+                        weight: weight,
+                        beerType: beerType,
+                        kegMark: batchMark,
+                        fittingStatus: fittingStatus,
+                        actions: actions,
+                        comboType: comboOption,
+                        operator: currentOperator,
+                        notes: notesInput,
+                        qa: "Ні",
+                        markingDate: markingDate,
+                        expiryDate: expiryDate
+                    };
+                    kegData.push(newEntry);
+                    kegsProduced++;
+                }
+
+                editingId = null; // Скидаємо режим редагування
+            }
+
+            document.getElementById('kegs-produced').textContent = kegsProduced;
+            renderTable();
+            updateCharts();
+            resetForm();
+            switchTab('journal');
+            saveToLocalStorage();
+
+            alert(editingId ? 'Запис оновлено' : 'Запис додано');
+        }
+
+        // Оновлення таблиці
+        function renderTable() {
+            const tableBody = document.querySelector("#keg-journal tbody");
+            tableBody.innerHTML = "";
+
+            kegData.forEach(entry => {
+                const row = document.createElement("tr");
+                let statusClass = 'status-ok';
+                let statusText = 'ОК';
+
+                if (entry.fittingStatus.includes('ОК')) {
+                    statusClass = 'status-ok';
+                    statusText = 'ОК';
+                } else if (entry.fittingStatus.includes('докручування')) {
+                    statusClass = 'status-warning';
+                    statusText = 'Докрутка';
+                } else if (entry.fittingStatus.includes('Обрізаний')) {
+                    statusClass = 'status-cut';
+                    statusText = 'Обрізаний';
+                } else if (entry.fittingStatus.includes('Верхня резинка')) {
+                    statusClass = 'status-top-rubber';
+                    statusText = 'Верх резинка';
+                } else if (entry.fittingStatus.includes('Нижня резинка')) {
+                    statusClass = 'status-bottom-rubber';
+                    statusText = 'Низ резинка';
+                } else {
+                    statusClass = 'status-danger';
+                    statusText = 'Заміна';
+                }
+
+                row.innerHTML = `
+                      <td>${entry.id}</td>
+                      <td>${entry.time}</td>
+                      <td>${entry.kegNumber}</td>
+                      <td>${entry.weight}</td>
+                      <td><span class="beer-type-tag">${entry.beerType}</span></td>
+                      <td>${entry.kegMark}</td>
+                      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                      <td><span class="keg-type-tag">${entry.comboType}</span></td>
+                      <td>${entry.operator}</td>
+                      <td class="actions">
+                          <button class="edit-btn" onclick="editEntry(${entry.id})"><i class="fas fa-edit"></i></button>
+                          <button class="delete-btn" onclick="deleteEntry(${entry.id})"><i class="fas fa-trash"></i></button>
+                      </td>
+                  `;
+                tableBody.appendChild(row);
+            });
+            
+            // Автопрокрутка до останнього запису
+            if (kegData.length > 0) {
+                const lastRow = tableBody.lastChild;
+                lastRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+
+        // Оновлення графіків продуктивності
+        function updateCharts() {
+            document.getElementById('total-kegs').textContent = kegData.length;
+            const okKegs = kegData.filter(e => e.fittingStatus.includes('ОК')).length;
+            document.getElementById('ok-kegs').textContent = okKegs;
+            const cutKegs = kegData.filter(e => e.fittingStatus.includes('Обрізаний')).length;
+            document.getElementById('cut-kegs').textContent = cutKegs;
+            document.getElementById('cut-kegs-count').textContent = cutKegs;
+
+            const rubberKegs = kegData.filter(e =>
+                e.fittingStatus.includes('Верхня резинка') ||
+                e.fittingStatus.includes('Нижня резинка')
+            ).length;
+            document.getElementById('rubber-kegs').textContent = rubberKegs;
+
+            const statusCounts = {
+                'ОК': okKegs,
+                'Докрутка': kegData.filter(e => e.fittingStatus.includes('докручування')).length,
+                'Заміна': kegData.filter(e => e.fittingStatus.includes('заміни') && !e.fittingStatus.includes('Обрізаний')).length,
+                'Обрізаний': cutKegs,
+                'Верхня резинка': kegData.filter(e => e.fittingStatus.includes('Верхня резинка')).length,
+                'Нижня резинка': kegData.filter(e => e.fittingStatus.includes('Нижня резинка')).length
+            };
+
+            const statusCtx = document.getElementById('status-chart').getContext('2d');
+            if (window.statusChart) {
+                window.statusChart.destroy();
+            }
+            window.statusChart = new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Без проблем', 'Потрібно докрутити', 'Потрібна заміна', 'Обрізаний фітинг', 'Верхня резинка', 'Нижня резинка'],
+                    datasets: [{
+                        data: [
+                            statusCounts['ОК'],
+                            statusCounts['Докрутка'],
+                            statusCounts['Заміна'],
+                            statusCounts['Обрізаний'],
+                            statusCounts['Верхня резинка'],
+                            statusCounts['Нижня резинка']
+                        ],
+                        backgroundColor: [
+                            '#4caf50',
+                            '#ff9800',
+                            '#f44336',
+                            '#9c27b0',
+                            '#2196f3',
+                            '#ff9800'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const beerCounts = {};
+            beerTypes.forEach(type => {
+                beerCounts[type.name] = kegData.filter(e => e.beerType === type.name).length;
+            });
+
+            const beerColors = beerTypes.map(type => type.color);
+
+            const beerCtx = document.getElementById('beer-chart').getContext('2d');
+            if (window.beerChart) {
+                window.beerChart.destroy();
+            }
+
+            window.beerChart = new Chart(beerCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(beerCounts),
+                    datasets: [{
+                        label: 'Кількість кег',
+                        data: Object.values(beerCounts),
+                        backgroundColor: beerColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Видалення запису
+        function deleteEntry(id) {
+            if (confirm(`Ви впевнені, що хочете видалити запис?`)) {
+                const index = kegData.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    const deletedEntry = kegData.splice(index, 1)[0];
+                    kegsProduced = Math.max(0, kegsProduced - 1);
+                    document.getElementById('kegs-produced').textContent = kegsProduced;
+                    renderTable();
+                    updateCharts();
+                    alert('Запис видалено успішно!');
+
+                    // Додаємо запис у журнал зміни
+                    addShiftEvent('Видалено кег', `ID: ${id}, №: ${deletedEntry.kegNumber}`);
+                    saveToLocalStorage();
+                }
+            }
+        }
+
+        function editEntry(id) {
+            const entry = kegData.find(e => e.id === id);
+            if (!entry) return;
+
+            editingId = id;
+
+            document.getElementById('keg-count').value = 1;
+            document.getElementById('keg-weight').value = entry.weight;
+            document.getElementById('beer-type').value = entry.beerType;
+            document.getElementById('fitting-status').value = entry.fittingStatus;
+            document.getElementById('additional-actions').value = entry.actions;
+            document.getElementById('notes').value = entry.notes;
+            document.getElementById('batch-mark').value = entry.kegMark;
+            document.getElementById('marking-date').value = entry.markingDate;
+            document.getElementById('expiry-date').value = entry.expiryDate;
+            document.getElementById('combo-option').value = entry.comboType;
+
+            switchTab('add-entry');
+            document.getElementById('add-entry-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Скидання форми
+        function resetForm() {
+            document.getElementById('keg-count').value = 1;
+            document.getElementById('keg-weight').value = '62';
+            document.getElementById('notes').value = '';
+            document.getElementById('batch-mark').value = '';
+            editingId = null;
+        }
+
+        // Швидке встановлення статусу
+        function setQuickAction(action) {
+            let status = 'ОК (не потребує втручання)';
+            let actions = '-';
+
+            switch (action) {
+                case 'ok':
+                    status = 'ОК (не потребує втручання)';
+                    break;
+                case 'tighten':
+                    status = 'Потребує докручування';
+                    actions = 'Виконано докручування';
+                    break;
+                case 'replace':
+                    status = 'Потребує заміни';
+                    actions = 'Виконано заміну фітінгу';
+                    break;
+                case 'cut':
+                    status = 'Обрізаний фітинг';
+                    actions = 'Заміна обрізаного фітінгу';
+                    break;
+                case 'top':
+                    status = 'Верхня резинка';
+                    actions = 'Заміна верхньої резинки';
+                    break;
+                case 'bottom':
+                    status = 'Нижня резинка';
+                    actions = 'Заміна нижньої резинки';
+                    break;
+            }
+
+            document.getElementById('fitting-status').value = status;
+            document.getElementById('additional-actions').value = actions;
+            
+            // Автозаповнення інших полів
+            document.getElementById('keg-weight').value = '62';
+            document.getElementById('beer-type').value = lastBeerType;
+            document.getElementById('batch-mark').value = lastBatchMark;
+            
+            // Автоматичне встановлення дат
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('marking-date').value = today;
+            
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            document.getElementById('expiry-date').value = expiryDate.toISOString().split('T')[0];
+        }
+
+        // Збереження даних в LocalStorage
+        function saveToLocalStorage() {
+            const data = {
+                kegData,
+                shiftEvents,
+                notifications,
+                shiftActive,
+                shiftStartTime,
+                shiftPaused,
+                currentOperator,
+                kegsProduced,
+                lastHourlyCheck,
+                hourlyKegs,
+                lastBatchMark,
+                lastBeerType,
+                lastComboOption,
+                saveTime: new Date().toISOString()
+            };
+            localStorage.setItem('kegJournalData', JSON.stringify(data));
+            alert('Дані успішно збережено!');
+        }
+
+        // Завантаження даних з LocalStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('kegJournalData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    
+                    // Оновлення даних програми
+                    kegData = data.kegData || [];
+                    shiftEvents = data.shiftEvents || [];
+                    notifications = data.notifications || [];
+                    shiftActive = data.shiftActive || false;
+                    shiftStartTime = data.shiftStartTime ? new Date(data.shiftStartTime) : null;
+                    shiftPaused = data.shiftPaused || false;
+                    currentOperator = data.currentOperator || 'Оператор';
+                    kegsProduced = data.kegsProduced || 0;
+                    lastHourlyCheck = data.lastHourlyCheck || null;
+                    hourlyKegs = data.hourlyKegs || 0;
+                    lastBatchMark = data.lastBatchMark || `BATCH-${new Date().getFullYear()}`;
+                    lastBeerType = data.lastBeerType || "10";
+                    lastComboOption = data.lastComboOption || "50 Комбі";
+                    
+                    // Оновлення інтерфейсу
+                    document.getElementById('current-user').textContent = currentOperator;
+                    document.getElementById('kegs-produced').textContent = kegsProduced;
+                    document.getElementById('cut-kegs-count').textContent = kegData.filter(e => 
+                        e.fittingStatus.includes('Обрізаний')).length;
+                    
+                    if (shiftActive) {
+                        document.getElementById('shift-status').textContent = shiftPaused ? 'Пауза' : 'Активна';
+                    }
+                    
+                    renderTable();
+                    renderShiftLog();
+                    renderNotifications();
+                    updateCharts();
+                    
+                    console.log('Дані успішно завантажено з LocalStorage');
+                } catch (error) {
+                    console.error('Помилка при завантаженні даних:', error);
+                }
+            }
+        }
+
+        // Експорт даних у формат JSON
+        function exportData() {
+            if (kegData.length === 0 && shiftEvents.length === 0) {
+                alert('Немає даних для експорту!');
+                return;
+            }
+            
+            const data = {
+                kegData,
+                shiftEvents,
+                currentOperator,
+                kegsProduced,
+                lastBatchMark,
+                lastBeerType,
+                lastComboOption,
+                exportTime: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `keg-journal-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Дані успішно експортовано!');
+        }
+
+        // Імпорт даних з JSON-файлу
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!confirm('Ви впевнені, що хочете імпортувати дані? Поточні дані будуть втрачені.')) {
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Оновлення даних програми
+                    kegData = data.kegData || [];
+                    shiftEvents = data.shiftEvents || [];
+                    currentOperator = data.currentOperator || 'Оператор';
+                    kegsProduced = data.kegsProduced || 0;
+                    lastBatchMark = data.lastBatchMark || `BATCH-${new Date().getFullYear()}`;
+                    lastBeerType = data.lastBeerType || "10";
+                    lastComboOption = data.lastComboOption || "50 Комбі";
+                    
+                    // Оновлення інтерфейсу
+                    document.getElementById('current-user').textContent = currentOperator;
+                    document.getElementById('kegs-produced').textContent = kegsProduced;
+                    document.getElementById('shift-status').textContent = 'Активна';
+                    
+                    renderTable();
+                    renderShiftLog();
+                    updateCharts();
+                    
+                    alert('Дані успішно імпортовано!');
+                    switchTab('journal');
+                    saveToLocalStorage();
+                } catch (error) {
+                    alert('Помилка при читанні файлу: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Ініціалізація при завантаженні сторінки
+        document.addEventListener("DOMContentLoaded", () => {
+            loadFromLocalStorage();
+            updateDateTime();
+            renderTable();
+            renderShiftLog();
+            renderNotifications();
+            updateCharts();
+        });
+    </script>
+</body>
+</html>
